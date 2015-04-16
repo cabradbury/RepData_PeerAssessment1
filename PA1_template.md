@@ -1,46 +1,59 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Load some libraries that will be used
-```{r}
+
+```r
 library(ggplot2)
 library(lattice)
 ```
 
 ## Set some preferences
-```{r}
+
+```r
 options(scipen = 1) # Do not allow scientific notation
 ```
 
 ## Set the working directory
-```{r}
+
+```r
 setwd("~/Documents/Coursera/Reproducible Research/Peer Assessment 1/RepData_PeerAssessment1/")
 ```
 
 ## Loading and preprocessing the data
-```{r}
+
+```r
 data <- read.csv("activity.csv", colClasses = c("integer", "Date", "factor"))
 ```
 
 ## What is mean total number of steps taken per day?
-```{r}
+
+```r
 hist(tapply(data$steps, data$date, sum), xlab = "Total Steps per Day", breaks = 20, main = "Total Steps per Day")
 ```
-```{r}
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+
+```r
 stepsMeanDaily <- mean(as.numeric(tapply(data$steps, data$date, sum)), na.rm = TRUE)
 stepsMeanDaily
 ```
-```{r}
+
+```
+## [1] 10766.19
+```
+
+```r
 stepsMedianDaily <- median(as.numeric(tapply(data$steps, data$date, sum)), na.rm = TRUE)
 stepsMedianDaily
 ```
 
+```
+## [1] 10765
+```
+
 ## What is the average daily activity pattern?
-```{r}
+
+```r
 data$interval <- as.factor(as.character(data$interval))
 dataIntervalMean <- as.numeric(tapply(data$steps, data$interval, mean, na.rm = TRUE))
 intervals <- data.frame(intervals = as.numeric(levels(data$interval)), dataIntervalMean)
@@ -52,17 +65,21 @@ plot(intervals$intervals, intervals$dataIntervalMean, type="l", main = "Average 
 axis(side = 1, at = labels.at, labels = labels)
 ```
 
-```{r}
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+
+
+```r
 highestMean <- round(max(intervals$dataIntervalMean),1)
 startTimeOfMax <- intervals[which.max(intervals$dataIntervalMean),1]
 endTimeOfMax <- startTimeOfMax + 5
 ```
-The time interval with the highest mean/average steps was: `r startTimeOfMax`am - `r endTimeOfMax`am. The mean/average steps for this time period was: `r highestMean`.
+The time interval with the highest mean/average steps was: 835am - 840am. The mean/average steps for this time period was: 206.2.
 
 ## Imputing missing values
 We will fill in the missing values (NA) with the mean values for that 5 minute interval
 
-```{r}
+
+```r
 steps <- vector()
 for(i in 1:dim(data)[1]) {
         if (is.na(data$steps[i])) {
@@ -75,36 +92,75 @@ for(i in 1:dim(data)[1]) {
 
 dataNoNA <- data.frame(steps = steps, date = data$date, interval = data$interval)
 ```
-```{r}
+
+```r
 hist(tapply(dataNoNA$steps, dataNoNA$date, sum), xlab="Total Daily Steps", breaks=20, main = "Total Steps per Day")
 ```
 
-```{r}
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png) 
+
+
+```r
 dataNoNA.totalSteps <- as.numeric(tapply(dataNoNA$steps, dataNoNA$date, sum))
 dataNoNA.mean <- round(mean(dataNoNA.totalSteps),2)
 dataNoNA.median <- round(median(dataNoNA.totalSteps),2)
 ```
 
-```{r}
+
+```r
 dataNoNA.mean
 ```
 
-```{r}
+```
+## [1] 10766.19
+```
+
+
+```r
 dataNoNA.median
 ```
-The new mean and median of the total number of steps per day after filling in the NA values is `r dataNoNA.mean` and `r dataNoNA.median`, respectively. The values are the same, and different from the original data set with the NAs in it, as we filled in the NAs in this data set with mean values. If we had chosen a different method, the mean and median would have been different results as well. 
+
+```
+## [1] 10766.19
+```
+The new mean and median of the total number of steps per day after filling in the NA values is 10766.19 and 10766.19, respectively. The values are the same, and different from the original data set with the NAs in it, as we filled in the NAs in this data set with mean values. If we had chosen a different method, the mean and median would have been different results as well. 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+
+```r
 dataNoNA$weekdays <- factor(format(dataNoNA$date, "%A"))
 levels(dataNoNA$weekdays)
+```
+
+```
+## [1] "Friday"    "Monday"    "Saturday"  "Sunday"    "Thursday"  "Tuesday"  
+## [7] "Wednesday"
+```
+
+```r
 levels(dataNoNA$weekdays) <- list(weekday = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"), weekend = c("Saturday", "Sunday"))
 levels(dataNoNA$weekdays)
+```
+
+```
+## [1] "weekday" "weekend"
+```
+
+```r
 table(dataNoNA$weekdays)
 ```
 
-```{r}
+```
+## 
+## weekday weekend 
+##   12960    4608
+```
+
+
+```r
 avgSteps <- aggregate(dataNoNA$steps, list(interval = as.numeric(as.character(dataNoNA$interval)), weekdays = dataNoNA$weekdays), FUN="mean")
 names(avgSteps)[3] <- "meanOfSteps"
 xyplot(avgSteps$meanOfSteps ~ avgSteps$interval | avgSteps$weekdays, layout = c(1,2), type = "l", xlab = "Interval", ylab = "Number of Steps")
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-16-1.png) 
